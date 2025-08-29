@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Auth & Provider Test</title>
+</head>
+<body>
+  <h1>Test Auth & Service Provider API</h1>
+
+  <!-- Register -->
+  <h2>Register</h2>
+  <input type="text" id="regName" placeholder="Name">
+  <input type="email" id="regEmail" placeholder="Email">
+  <input type="password" id="regPassword" placeholder="Password">
+  <button onclick="register()">Register</button>
+  <pre id="regResult"></pre>
+
+  <!-- Login -->
+  <h2>Login</h2>
+  <input type="email" id="loginEmail" placeholder="Email">
+  <input type="password" id="loginPassword" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <pre id="loginResult"></pre>
+
+  <!-- Service Provider -->
+  <h2>Create Service Provider</h2>
+  <input type="text" id="providerCategories" placeholder="Categories (comma separated)">
+  <input type="text" id="providerLocation" placeholder="Location">
+  <input type="text" id="providerToken" placeholder="JWT token">
+  <button onclick="createProvider()">Create Provider</button>
+  <pre id="providerResult"></pre>
+
+  <h2>Get All Providers</h2>
+  <button onclick="getProviders()">Get Providers</button>
+  <pre id="providersList"></pre>
+  <h2>List Providers with Ratings</h2>
+<button onclick="listProvidersWithRatings()">Show Providers</button>
+<pre id="providersWithRatings"></pre>
+
+  <!-- Bookings -->
+  <h2>Create Booking</h2>
+<input type="text" id="bookingProvider" placeholder="Provider ID">
+<input type="text" id="bookingService" placeholder="Service">
+<input type="datetime-local" id="bookingDate">
+<input type="text" id="bookingToken" placeholder="JWT token">
+<button onclick="createBooking()">Create Booking</button>
+<pre id="bookingResult"></pre>
+
+<h2>View My Bookings</h2>
+<input type="text" id="myBookingToken" placeholder="JWT token">
+<button onclick="getMyBookings()">Get My Bookings</button>
+<pre id="myBookingsList"></pre>
+
+
+
+<h2>Pay for Booking</h2>
+<input type="text" id="payBookingId" placeholder="Booking ID">
+<input type="number" id="payAmount" placeholder="Amount (USD)">
+<input type="text" id="payToken" placeholder="JWT token">
+<button onclick="payBooking()">Create Payment</button>
+<pre id="paymentResult"></pre>
+<h2>Mark Booking as Paid</h2>
+<input type="text" id="paidBookingId" placeholder="Booking ID">
+<button onclick="markBookingPaid()">Mark Paid</button>
+<pre id="markPaidResult"></pre>
+
+
+<h2>Add Review</h2>
+<input type="text" id="reviewProviderId" placeholder="Provider ID">
+<input type="number" id="reviewRating" placeholder="Rating (1-5)">
+<input type="text" id="reviewComment" placeholder="Comment">
+<input type="text" id="reviewToken" placeholder="JWT token">
+<button onclick="addReview()">Add Review</button>
+<pre id="reviewResult"></pre>
+
+<h2>Get Reviews</h2>
+<input type="text" id="getReviewProviderId" placeholder="Provider ID">
+<button onclick="getReviews()">Get Reviews</button>
+<pre id="reviewsList"></pre>
+
+
+  <!-- Protected Route Test -->
+  <h2>Protected Route Test</h2>
+  <input type="text" id="token" placeholder="Enter JWT token">
+  <button onclick="protectedRoute()">Test Protected Route</button>
+  <pre id="protectedResult"></pre>
+
+  <script>
+    const API_AUTH = "http://localhost:4000/api/auth";
+    const API_PROVIDERS = "http://localhost:4000/api/providers";
+
+    // ----- Auth -----
+    async function register() {
+      const name = document.getElementById("regName").value;
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPassword").value;
+
+      const res = await fetch(`${API_AUTH}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      document.getElementById("regResult").textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function login() {
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+
+      const res = await fetch(`${API_AUTH}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      document.getElementById("loginResult").textContent = JSON.stringify(data, null, 2);
+    }
+async function listProvidersWithRatings() {
+  const res = await fetch("http://localhost:4000/api/providers");
+  const providers = await res.json();
+
+  // Format provider info with ratings
+  const formatted = providers.map(p => {
+    return {
+      _id: p._id,
+      categories: p.categories.join(", "),
+      location: p.location,
+      rating: p.rating || 0,
+      reviewsCount: p.reviews ? p.reviews.length : 0
+    };
+  });
+
+  document.getElementById("providersWithRatings").textContent = JSON.stringify(formatted, null, 2);
+}
+
+    // ----- Service Provider -----
+    async function createProvider() {
+      const categories = document.getElementById("providerCategories").value.split(",").map(c => c.trim());
+      const location = document.getElementById("providerLocation").value;
+      const token = document.getElementById("providerToken").value;
+
+      const res = await fetch(API_PROVIDERS, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ categories, location })
+      });
+      const data = await res.json();
+      document.getElementById("providerResult").textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function getProviders() {
+      const res = await fetch(API_PROVIDERS);
+      const data = await res.json();
+      document.getElementById("providersList").textContent = JSON.stringify(data, null, 2);
+    }
+
+
+    const API_REVIEWS = "http://localhost:4000/api/reviews";
+
+async function addReview() {
+  const providerId = document.getElementById("reviewProviderId").value;
+  const rating = document.getElementById("reviewRating").value;
+  const comment = document.getElementById("reviewComment").value;
+  const token = document.getElementById("reviewToken").value;
+
+  const res = await fetch(API_REVIEWS, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ providerId, rating, comment })
+  });
+
+  const data = await res.json();
+  document.getElementById("reviewResult").textContent = JSON.stringify(data, null, 2);
+}
+
+async function getReviews() {
+  const providerId = document.getElementById("getReviewProviderId").value;
+  const res = await fetch(`${API_REVIEWS}/${providerId}`);
+  const data = await res.json();
+  document.getElementById("reviewsList").textContent = JSON.stringify(data, null, 2);
+}
+
+
+    //bookings
+const API_BOOKINGS = "http://localhost:4000/api/bookings";
+
+// Create a new booking
+async function createBooking() {
+  const provider = document.getElementById("bookingProvider").value;
+  const service = document.getElementById("bookingService").value;
+  const date = document.getElementById("bookingDate").value;
+  const token = document.getElementById("bookingToken").value;
+
+  const res = await fetch(API_BOOKINGS, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ provider, service, date })
+  });
+
+  const data = await res.json();
+  document.getElementById("bookingResult").textContent = JSON.stringify(data, null, 2);
+}
+
+// Get bookings for logged-in user
+async function getMyBookings() {
+  const token = document.getElementById("myBookingToken").value;
+
+  const res = await fetch(`${API_BOOKINGS}/my`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  const data = await res.json();
+  document.getElementById("myBookingsList").textContent = JSON.stringify(data, null, 2);
+}
+
+    
+const API_PAYMENTS = "http://localhost:4000/api/payments";
+
+async function payBooking() {
+  const bookingId = document.getElementById("payBookingId").value;
+  const amount = document.getElementById("payAmount").value;
+  const token = document.getElementById("payToken").value;
+
+  const res = await fetch(API_PAYMENTS, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ bookingId, amount })
+  });
+
+  const data = await res.json();
+  document.getElementById("paymentResult").textContent = JSON.stringify(data, null, 2);
+}
+async function markBookingPaid() {
+  const bookingId = document.getElementById("paidBookingId").value;
+
+  const res = await fetch(`http://localhost:4000/api/bookings/mark-paid/${bookingId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" }
+  });
+
+  const data = await res.json();
+  document.getElementById("markPaidResult").textContent = JSON.stringify(data, null, 2);
+}
+
+    // ----- Protected Route -----
+    async function protectedRoute() {
+      const token = document.getElementById("token").value;
+
+      const res = await fetch("http://localhost:4000/api/users/me", {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      document.getElementById("protectedResult").textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
