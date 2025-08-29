@@ -290,12 +290,6 @@ Book services and pay securely:
 * **Name**: Insa Abbas
 * **Email**: [insaabbas675@gmail.com](mailto:insaabbas675@gmail.com)
 
----
-
-## **License**
-
-MIT License
-
 
 
 
