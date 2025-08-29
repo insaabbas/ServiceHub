@@ -296,10 +296,6 @@ Book services and pay securely:
 
 MIT License
 
----
 
-✅ This README is **fully VS Code ready**, images are centered and scaled nicely, and the video plays correctly in preview.
-
----
 
 
